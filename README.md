@@ -1,2 +1,2 @@
-# barleyPantranscriptome
-Barley pan-transcriptome paper -- analysis code 
+# Barley pan-transcriptome paper -- analysis code
+ 
