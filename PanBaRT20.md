@@ -1,7 +1,7 @@
 ---
-title: "README"
+title: "PanBaRT20"
 author: "Wenbin Guo"
-date: "2023-11-01"
+date: "2023-11-07"
 output: html_document
 ---
 
@@ -15,9 +15,20 @@ Table of contents
 
 -   [Description](#description)
 -   [Short-read RTD construction](#short-read-rtd-construction)
+    +   [RNA-seq data pre-processing](#rna-seq-data-pre-processing)
+    +   [RNA-seq read mapping](#rna-seq-read-mapping)
+    +   [RNA-seq transcript assembly](#rna-seq-transcript-assembly)
+    +   [Merge transcripts across samples](#merge-transcripts-across-samples)
 -   [Long-read RTD construction](#long-read-rtd-construction)
--   [Genotype-specific RTD construction](#genotype-specific-rtd-construction)
--   [Barley Pan-RTD construction](#barley-pan-rtd-construction)
+    +   [Iso-seq data pre-processing](#iso-seq-data-pre-processing)
+    +   [Iso-seq read mapping](#iso-seq-read-mapping)
+    +   [Iso-seq transcript assembly](#iso-seq-transcript-assembly)
+    +   [Assembly quality control](#assembly-quality-control)
+-   [Genotype-specific RTDs](#genotype-specific-rtds)
+-   [Barley PanBaRT20](#barley-panbart20)
+    +   [Construction of linear pan-genome](#construction-of-linear-pan-genome)
+    +   [Map GsRTDs to linear pan-genome](#map-gsrtds-to-linear-pan-genome)
+    +   [Gene and trasncript association between PanBaRT20 and GsRTDs](#gene-and-trasncript-association-between-panbart20-and-gsrtds)
 -   [References](#references)
 
 <div align="justify">
@@ -31,7 +42,7 @@ Description
 Short-read RTD construction
 -----------
 
-### Data pre-processing
+### RNA-seq data pre-processing
 
 Fastp v0.20.1 (Chen et al., 2018) was used to remove adapters and filter reads with a quality score of less than 20 and a length of less than 30 bases.
 
@@ -56,6 +67,7 @@ fastp \
 -j ${output_folder}/${sample}_fastp.json
 
 ```
+<a href='#table-of-contents'>Go back to Table of contents</a>
 
 ### RNA-seq read mapping
 
@@ -142,6 +154,7 @@ STAR \
 cat star_result_pass1/*/SJ.out.tab | awk '($5 > 0 && $7 > 2 && $6==0)' | cut -f1-6 | sort | uniq > $sj_file
 
 ```
+<a href='#table-of-contents'>Go back to Table of contents</a>
 
 ### Transcript assembly
 
@@ -181,6 +194,7 @@ scallop \
 --library_type first
 
 ```
+<a href='#table-of-contents'>Go back to Table of contents</a>
 
 ### Merge transcripts across samples
 We used RTDmaker (https://github.com/anonconda/RTDmaker) to merge the assembled transcripts across samples in each genotype. 
@@ -218,7 +232,7 @@ python /home/wguo/scratch/pantrans/code/RTDmaker/RTDmaker.py ShortReads \
 Long-read RTD construction
 -----------
 
-### Data pre-processing
+### Iso-seq data pre-processing
 IsoSeqv3 pipeline (https://github.com/PacificBiosciences/IsoSeq) was used to perform data pre-processing of Iso-seq long read data.
 
 #### Circular Consensus Sequence calling
@@ -261,8 +275,9 @@ isoseq3 refine ${input_bam} ${barcode_fasta} ${output_bam} --require-polya
 samtools fasta ${output_bam} > ${output_fasta}
 
 ```
+<a href='#table-of-contents'>Go back to Table of contents</a>
 
-### Read mapping
+### Iso-seq read mapping
 
 FLNC reads were mapped to reference genome by using Minimap2 v2.24 (Li, 2018). The maximum intron size was set to 15,000. 
 
@@ -275,8 +290,9 @@ FLNC reads were mapped to reference genome by using Minimap2 v2.24 (Li, 2018). T
 minimap2 -ax splice:hq -uf -G $maxintron ${genome} ${input} -o ${output}
 
 ```
+<a href='#table-of-contents'>Go back to Table of contents</a>
 
-### Transcript assembly
+### Iso-seq transcript assembly
 
 TAMA collapse generated transcriptome models from the read mapping results (Kuo et al., 2020). 
 
@@ -296,8 +312,8 @@ python /home/wguo/scratch/isoseq/app/tama/tama_collapse.py \
 
 <a href='#table-of-contents'>Go back to Table of contents</a>
 
-
-### Splice junction analysis
+### Assembly quality control
+#### Splice junction analysis
 
 
 In-house R scripts are used to perform splice junction (SJ) analysis, where the focus is on detecting and handling mapping errors around SJs. The mapping error information is extracted from the TAMA outputs, allowing for the identification of transcripts with SJs that exhibit mapping errors within a range of +/- 10 base pairs around the SJs. In most cases, these problematic transcripts are removed from further analysis.
@@ -719,8 +735,57 @@ subGR <- function(gr,cood){
 <a href='#table-of-contents'>Go back to Table of contents</a>
 
 
-### Transcript start and end analysis
+#### Transcript start and end analysis
 
+The sequencing frequency of transcription start sites (TSSs) and transcription end sites (TESs) is notably higher for highly expressed genes, with the number of reads supporting genuine TSSs/TESs being significantly distinguishable from random occurrences. In contrast, for lowly expressed genes, the reads are essentially indistinguishable from background noise when subjected to significance testing. As a result, we devised a two-step model to establish high-confidence TSS and TES sites for inclusion in the long-read transcriptome dataset.
+
+Firstly, we employed a Binomial test to investigate the deviations between the observed reads at specific genomic sites (TSS/TES) and the expected reads based on randomness. For a gene with *s* genomic sites and a total of n mapped reads, the null hypothesis assumed that the read distribution was random. Each site had a fair probability (*x = 1/s*) of being sequenced, resulting in an expected number of reads for each site of *n/s*. We calculated the probability of observing *k* or more reads under this null hypothesis and defined a one-tailed test p-value as follows:
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="tml-display" style="display:block math;">
+  <mrow>
+    <mi>p</mi>
+    <mo>=</mo>
+    <mrow>
+      <munderover>
+        <mo movablelimits="false">∑</mo>
+        <mrow>
+          <mi>i</mi>
+          <mo>=</mo>
+          <mi>k</mi>
+        </mrow>
+        <mi>n</mi>
+      </munderover>
+    </mrow>
+    <mrow>
+      <mo fence="true">(</mo>
+      <mfrac linethickness="0px">
+        <mi>n</mi>
+        <mi>i</mi>
+      </mfrac>
+      <mo fence="true">)</mo>
+    </mrow>
+    <msup>
+      <mi>x</mi>
+      <mi>i</mi>
+    </msup>
+    <mo form="prefix" stretchy="false">(</mo>
+    <mn>1</mn>
+    <mo>−</mo>
+    <mi>x</mi>
+    <msup>
+      <mo form="postfix" stretchy="false">)</mo>
+      <mrow>
+        <mi>n</mi>
+        <mo>−</mo>
+        <mi>i</mi>
+      </mrow>
+    </msup>
+  </mrow>
+</math>
+
+A significant p-value indicated the rejection of the null hypothesis that the genomic site occurred randomly. We adjusted these p-values using the Benjamini & Hochberg method to control the false discovery rate (FDR) associated with multiple hypotheses (Benjamini and Hochberg, 1995). To qualify as a high-confidence TSS/TES, it must meet the criteria of *k ≥ n/s* and *FDR < 0.05*. Recognizing the stochastic nature of TSS/TES, we considered reads whose ends were within ±50 nucleotides upstream and downstream of a significant genomic site as high-confidence.
+
+Secondly, for genes without significant TSS/TES, a stringent threshold was applied, retaining genomic sites supported by a minimum of 2 reads within a sliding window of ±5 nucleotides. 
 
 ```
 # Transcript start site (TSS) and end site (TES) analysis
@@ -875,14 +940,12 @@ HCsite <- function(site_stats,
   result
 }
 
-
-
-
 ```
 <a href='#table-of-contents'>Go back to Table of contents</a>
 
 
-### Filter transcripts with low-quality SJs or TSS/TES 
+#### Filter transcripts with low-quality SJs or TSS/TES 
+Based on the splice junction and transcript start (TSS) and end (TES) analysis in previous steps, the transcripts with problematic or low-quality SJs or TSS/TES were filtered. 
 
 ```
 # Filter collasped transcript datasets
@@ -998,25 +1061,806 @@ message(paste('Time for analysis:',round(time.taken,3),attributes(time.taken)$un
 
 ```
 
+#### TAMA merge of redundant transcripts
+
+To mitigate redundant transcripts resulting from stochasticity, transcripts with small variances within 50 nucleotides at the 5' and 3' UTR regions were removed using the TAMA merge tool with the parameters "-m 0 -a 50 -z 50 -d merge_dup."
+
+```
+# data_idr: the working directory of the long read assembly
+# data_idr
 
 
-Genotype-specific RTD construction
+python /home/wguo/scratch/isoseq/app/tama/tama_merge.py \
+-f $data_idr/tama_merge_final_rtd_file.txt \
+-p $data_idr/htsm_rtd \
+-m 0 \
+-a $t5 \
+-z $t3 \
+-d merge_dup
+```
+<a href='#table-of-contents'>Go back to Table of contents</a>
+
+Genotype-specific RTDs
 ----------- 
 
+The short-read assembly and long-read assembly in each genotype were merged to generate the genotype-specific RTDs (GsRTDs).
 
-Barley Pan-RTD construction
------------ 
+- The gene models of long-read RTD was used as the reference.
+- The transcripts in short-read RTD that contribute to novel SJs or novel gene loci were integrated into the long-read RTD.
+- In the integration result, the overlapped transcripts were assigned with the same gene ID. 
+- If a set of overlapped transcripts can be divided into two groups and the maximum overlap length of these two group is < 5%, they are treated as separate gene models. 
 
+```
+# inf_file: short-read RTD gtf or bed file
+# ref_file: long-read RTD gtf or bed file
+# prefix_ref='ref': prefix attached to long-read RTD gene ids
+# prefix_inf='inf': prefix attached to short-read RTD gene ids
+# prefix_gene: NULL
+# chimeric_tolerance: percentage cut-off of chimeric gene models
+# genome_file: reference genome fasta file
+# check_canonical: logical, whether to check canoncial SJs
+# data_dir: the working direcotry
+
+
+start.time <- Sys.time()
+if(is.null(data_dir))
+  data_dir <- getwd()
+
+if(!file.exists(data_dir))
+  dir.create(data_dir,recursive = T)
+
+message('Step 1: Load gtf files')
+## load gtf files
+ref <- import(ref_file)
+inf <- import(inf_file)
+
+if(grepl(pattern = '[.]bed',inf_file)){
+  inf <- unlist(blocks(inf))
+  inf$gene_id <- gsub(';.*','',names(inf))
+  inf$transcript_id <- gsub('.*;','',names(inf))
+  inf$type <- 'exon'
+  names(inf) <- NULL
+  inf <- sort(inf,by=~seqnames + start + end)
+}
+
+if(grepl(pattern = '[.]bed',ref_file)){
+  ref <- unlist(blocks(ref))
+  ref$gene_id <- gsub(';.*','',names(ref))
+  ref$transcript_id <- gsub('.*;','',names(ref))
+  ref$type <- 'exon'
+  names(ref) <- NULL
+  ref <- sort(ref,by=~seqnames + start + end)
+}
+
+ref <- cleanMcols(ref)
+inf <- cleanMcols(inf)
+
+ref <- ref[ref$type=='exon',]
+inf <- inf[inf$type=='exon',]
+
+## filter gene with multiple strands in inf RTD
+strand_idx <- elementNROWS(range(GenomicRanges::split(inf,inf$gene_id)))
+strand_idx <- names(strand_idx)[strand_idx>1]
+inf <- inf[!(inf$gene_id %in% strand_idx),]
+
+## add prefix to gene ids
+ref$gene_id <- paste0(prefix_ref,'_',ref$gene_id)
+ref$transcript_id <- paste0(prefix_ref,'_',ref$transcript_id)
+ref$source <- prefix_ref
+
+inf$gene_id <- paste0(prefix_inf,'_',inf$gene_id)
+inf$transcript_id <- paste0(prefix_inf,'_',inf$transcript_id)
+inf$source <- prefix_inf
+
+message('Step 2: Identify novel transcript in the inference RTD')
+inf_trans_list <- list()
+
+message('  -> Process multi-exon transcripts')
+####################################################
+###---> Multi-exon transcripts
+
+## generate unique labels of SJ chain
+intron_ref <- exon2intron(ref)
+intron_ref <- sort(intron_ref,by = ~ seqnames + start + end)
+intron_ref_sj <- intron_ref$label
+intron_ref_trans <- base::split(intron_ref_sj,intron_ref$transcript_id)
+intron_ref_trans <- sapply(intron_ref_trans, function(x) paste(x,collapse = ';'))
+
+intron_inf <- exon2intron(inf)
+intron_inf <- sort(intron_inf,by = ~ seqnames + start + end)
+intron_inf_sj <- intron_inf$label
+intron_inf_trans <- base::split(intron_inf_sj,intron_inf$transcript_id)
+intron_inf_trans <- sapply(intron_inf_trans, function(x) paste(x,collapse = ';'))
+
+## add source the ref rtd
+trans_add_s <- names(intron_ref_trans)[intron_ref_trans %in% intron_inf_trans]
+ref$source[ref$transcript_id %in% trans_add_s] <- paste0('SJ:',prefix_ref,'&',prefix_inf)
+
+## get the transcript names with novel SJ labels
+idx <- which(!(intron_inf_sj %in% intron_ref_sj))
+trans_multiexon_novel <- unique(intron_inf[idx]$transcript_id)
+
+## multi-exon transcripts in inf which are not novel
+trans_multiexon_filtered <- setdiff(names(intron_inf_sj),trans_multiexon_novel)
+inf_trans_list <- c(inf_trans_list,trans_multiexon_filtered=list(trans_multiexon_filtered))
+inf_trans_list <- c(inf_trans_list,trans_multiexon_novel=list(trans_multiexon_novel))
+
+message('  -> Process mono-exon transcripts')
+## get mono exon transcripts
+ref_mono <- getMonoExonTrans(ref)
+inf_mono <- getMonoExonTrans(inf)
+
+## check whether inf mono exon trans has overlap of exons of ref, introic is excluded.
+trans_mono <- unique(inf_mono$transcript_id)
+hits <- suppressWarnings(findOverlaps(query = inf_mono,
+                                      subject = ref,ignore.strand=FALSE))
+
+## get novel mono exon trans with no overlap
+trans_overlap <- inf_mono[queryHits(hits),]$transcript_id
+trans_monoexon_novel <- setdiff(trans_mono,trans_overlap)
+trans_monoexon_filtered <- setdiff(trans_mono,trans_monoexon_novel)
+
+inf_trans_list <- c(inf_trans_list,trans_monoexon_novel=list(trans_monoexon_novel))
+inf_trans_list <- c(inf_trans_list,trans_monoexon_filtered=list(trans_monoexon_filtered))
+
+## novel transcripts in inf rtd, multi-exon + mono-exon
+trans_novel<- union(trans_multiexon_novel,trans_monoexon_novel)
+inf2keep <- inf[inf$transcript_id %in% trans_novel]
+
+message('Step 3: Merge inf to ref RTD and rename transcript and gene ids')
+
+rtd <- suppressWarnings(c(ref,inf2keep))
+rtd <- sort(rtd,by=~seqnames+start+end)
+rtd$gene_id_old <- rtd$gene_id
+rtd$transcript_id_old <- rtd$transcript_id
+
+if(check_canonical){
+  if(is.null(genome_file)){
+    message('Genome is not provide, Canonical SJ is not checked')
+  } else {
+    genome <- import(genome_file)
+    motif <- getIntronMotif(gr = rtd, genome = genome)
+    trans <- unique(motif$transcript_id[motif$canonical=='No'])
+    if(length(trans) > 0)
+      rtd <- rtd[!(rtd$transcript_id %in% trans)] else rtd <- rtd
+  }
+}
+
+
+### Gene initial rename, overlap between transcripts and gene collapsed region
+gene_overlap <- getOverlapRange(rtd)
+trans_range <- getTransRange(rtd)
+hits <- findOverlaps(query = trans_range,subject = gene_overlap)
+
+### Get the initial gene-transcript mapping table
+mapping <- data.frame(seqnames=seqnames(trans_range[queryHits(hits)]),
+                      transcript_id_old=trans_range[queryHits(hits)]$transcript_id,
+                      gene_id_group=gene_overlap[subjectHits(hits)]$gene_id)
+mapping <- mapping[!duplicated(mapping),]
+mapping <- mapping[order(mapping$gene_id_group,decreasing = F),]
+mapping$gene_i <- rep(1:length(unique(mapping$gene_id_group)),
+                      rle(mapping$gene_id_group)$lengths)
+pad_n <- length(unique(mapping$gene_i))
+pad_n <- nchar(format(pad_n,scientific = FALSE))
+mapping$gene_id <- paste0(mapping$seqnames,'G',
+                          stringi::stri_pad(mapping$gene_i,width = pad_n,pad = '0'))
+mapping$transcript_i <- sequence(rle(mapping$gene_id)$lengths)
+mapping$transcript_id <- paste0(mapping$gene_id,'.',mapping$transcript_i)
+rownames(mapping) <- mapping$transcript_id_old
+
+## rename
+rtd$transcript_id <- mapping[rtd$transcript_id_old,'transcript_id']
+rtd$gene_id <- mapping[rtd$transcript_id_old,'gene_id']
+
+##### check intronic
+# overlap between trans_range and intron disjoin
+message('  -> Process intronic genes')
+trans_range <- getTransRange(rtd)
+introns <- exon2intron(exons = rtd)
+introns_s <- GenomicRanges::split(introns,introns$gene_id)
+introns_d <- unlist(disjoin(introns_s))
+introns_d$gene_id <- names(introns_d)
+
+hits <- findOverlaps(trans_range,introns_d,type = 'within')
+if(NROW(hits)>0){
+  intronic <- trans_range[queryHits(hits)]
+  gene_overlap_intronic <- getOverlapRange(intronic)
+  trans_range_intronic <- getTransRange(intronic)
+  hits <- findOverlaps(query = trans_range_intronic,subject = gene_overlap_intronic)
+  mapping_intronic  <- data.frame(
+    seqnames=seqnames(trans_range_intronic[queryHits(hits)]),
+    transcript_id_old=trans_range_intronic[queryHits(hits)]$transcript_id,
+    gene_id_group=gene_overlap_intronic[subjectHits(hits)]$gene_id)
+  
+  mapping_intronic <- mapping_intronic[order(mapping_intronic$gene_id_group,
+                                             decreasing = F),]
+  mapping_intronic$gene_i <- rep(1:length(unique(mapping_intronic$gene_id_group)),
+                                 rle(mapping_intronic$gene_id_group)$lengths)
+  n <- max(mapping_intronic$gene_i)
+  mapping_intronic$gene_i <- mapping_intronic$gene_i/10^ceiling(log10(n)+1)
+  rownames(mapping_intronic) <- mapping_intronic$transcript_id_old
+  
+  rownames(mapping) <- mapping$transcript_id
+  idx <- mapping_intronic$transcript_id_old
+  mapping[idx,'gene_i'] <- mapping[idx,'gene_i']+mapping_intronic[idx,'gene_i']
+  mapping$gene_i <- as.integer(factor(mapping$gene_i))
+  
+  mapping$gene_id <- paste0(mapping$seqnames,'G',
+                            stringi::stri_pad(mapping$gene_i,width = pad_n,pad = '0'))
+  mapping <- mapping[order(mapping$gene_id,decreasing = F),]
+  mapping$transcript_i <- sequence(rle(mapping$gene_id)$lengths)
+  mapping$transcript_id <- paste0(mapping$gene_id,'.',mapping$transcript_i)
+  rownames(mapping) <- mapping$transcript_id_old
+  rtd$transcript_id <- mapping[rtd$transcript_id_old,'transcript_id']
+  rtd$gene_id <- mapping[rtd$transcript_id_old,'gene_id']
+  
+  trans_range <- getTransRange(rtd)
+}
+# trans_range$gene_id <- gsub('[.].*','',trans_range$transcript_id)
+trans_range$gene_id <- sub("\\.[^.]*$", "", trans_range$transcript_id)
+
+
+message('  -> Process chimeric check')
+###---> find overlap between transcript ranges and transcript ranges
+hits <- findOverlaps(query = trans_range,subject = trans_range)
+idx <- which(queryHits(hits)!=subjectHits(hits))
+hits <- hits[idx,]
+
+## get the overlaps < chimeric_tolerance
+gr1 <- trans_range[queryHits(hits)]
+gr2 <- trans_range[subjectHits(hits)]
+overlaps <- pintersect(gr1,gr2)
+p1 <- width(overlaps)/width(gr1)
+p2 <- width(overlaps)/width(gr2)
+idx <- which(p1 < chimeric_tolerance & p2 < chimeric_tolerance)
+overlaps_pass <- overlaps[idx]
+overlaps_pass$from <- gr1$transcript_id[idx]
+overlaps_pass$to <- gr2$transcript_id[idx]
+overlaps_pass$transcript_id <- NULL
+overlaps_pass$hit <- NULL
+overlaps_pass <- unique(overlaps_pass)
+
+## do second check, if the overlaps inside in other transcritps
+trans <- union(gr1$transcript_id[idx],gr2$transcript_id[idx])
+genes <- unique(sub('\\..[^\\.]*$', '', trans))
+trans_range_pass <- trans_range[trans_range$gene_id %in% genes]
+trans_range_pass_remain <-
+  trans_range_pass[!(trans_range_pass$transcript_id %in% trans)]
+hits_pass <- findOverlaps(query = overlaps_pass,trans_range_pass_remain,
+                          type = 'within')
+
+idx <- unique(queryHits(hits_pass))
+overlaps_pass <- overlaps_pass[-idx,]
+
+overlaps_pass_split <- GenomicRanges::split(overlaps_pass,overlaps_pass$gene_id)
+## if multiple overlap, get range and check range length agaist transcript length
+if(any(elementNROWS(overlaps_pass_split)>1)){
+  overlaps_pass_split <- unlist(range(overlaps_pass_split))
+  overlaps_pass_split$gene_id <- names(overlaps_pass_split)
+  # names(overlaps_pass_split) <- NULL
+  overlaps_pass_split <- overlaps_pass_split[overlaps_pass$gene_id]
+  overlaps_pass_split$from <- overlaps_pass$from
+  overlaps_pass_split$to <- overlaps_pass$to
+  
+  #check again if the region is more than > tolorance
+  trans_l <- width(trans_range)
+  names(trans_l) <- trans_range$transcript_id
+  overlaps_pass_split$from_overlap <- width(overlaps_pass_split)/trans_l[overlaps_pass_split$from]
+  overlaps_pass_split$to_overlap <- width(overlaps_pass_split)/trans_l[overlaps_pass_split$to]
+  
+  idx_filter <- which(overlaps_pass_split$to_overlap >= chimeric_tolerance |
+                        overlaps_pass_split$from_overlap >= chimeric_tolerance)
+  if(length(idx_filter)>0){
+    genes2filer <- unique(overlaps_pass_split$gene_id[idx_filter])
+    overlaps_pass <- overlaps_pass[!(overlaps_pass$gene_id %in% genes2filer)]
+  } else {
+    overlaps_pass <- overlaps_pass
+  }
+}
+
+trans_range_pass <- trans_range_pass[trans_range_pass$gene_id %in% overlaps_pass$gene_id]
+
+## repeat the overlap to match the overlap to all the transcripts in the gene
+overlaps_pass <- GenomicRanges::split(overlaps_pass,overlaps_pass$gene_id)
+overlaps_pass <- reduce(overlaps_pass)
+overlaps_pass <- unlist(overlaps_pass)
+overlaps_pass <- overlaps_pass[trans_range_pass$gene_id]
+overlaps_pass$gene_id <- trans_range_pass$gene_id
+overlaps_pass$transcript_id <- trans_range_pass$transcript_id
+
+## check agian if any gene in the middle of the transcript ranges
+idx2rm <- which(start(overlaps_pass) > start(trans_range_pass) &
+                  end(overlaps_pass) < end(trans_range_pass))
+if(length(idx2rm) > 0){
+  genes2rm <- unique(trans_range_pass$gene_id[idx2rm])
+  trans_range_pass <- trans_range_pass[!(trans_range_pass$gene_id %in% genes2rm)]
+  overlaps_pass <- overlaps_pass[trans_range_pass$gene_id]
+}
+
+if(NROW(overlaps_pass) > 0 ){
+  ## take away overlap from all the transcripts
+  trans_range_pass_cut <- psetdiff(trans_range_pass,overlaps_pass)
+  mcols(trans_range_pass_cut) <- mcols(trans_range_pass)
+  
+  gene_overlap_chemric <- getOverlapRange(trans_range_pass_cut)
+  hits <- findOverlaps(trans_range_pass_cut,gene_overlap_chemric)
+} else {
+  hits <- NULL
+}
+
+if(NROW(hits)>0){
+  mapping_chemric  <- data.frame(
+    seqnames=seqnames(trans_range_pass_cut[queryHits(hits)]),
+    transcript_id_old=trans_range_pass_cut[queryHits(hits)]$transcript_id,
+    gene_id_group=gene_overlap_chemric[subjectHits(hits)]$gene_id)
+  
+  mapping_chemric <- mapping_chemric[order(mapping_chemric$gene_id_group,
+                                           decreasing = F),]
+  mapping_chemric$gene_i <- rep(1:length(unique(mapping_chemric$gene_id_group)),
+                                rle(mapping_chemric$gene_id_group)$lengths)
+  n <- max(mapping_chemric$gene_i)
+  mapping_chemric$gene_i <- mapping_chemric$gene_i/10^ceiling(log10(n)+1)
+  rownames(mapping_chemric) <- mapping_chemric$transcript_id_old
+  
+  rownames(mapping) <- mapping$transcript_id
+  idx <- mapping_chemric$transcript_id_old
+  mapping[idx,'gene_i'] <- mapping[idx,'gene_i']+mapping_chemric[idx,'gene_i']
+  mapping$gene_i <- as.integer(factor(mapping$gene_i))
+  mapping$gene_id <- paste0(mapping$seqnames,'G',
+                            stringi::stri_pad(mapping$gene_i,width = pad_n,pad = '0'))
+  mapping$transcript_i <- sequence(rle(mapping$gene_id)$lengths)
+  mapping$transcript_id <- paste0(mapping$gene_id,'.',mapping$transcript_i)
+  rownames(mapping) <- mapping$transcript_id_old
+  rtd$transcript_id <- mapping[rtd$transcript_id_old,'transcript_id']
+  rtd$gene_id <- mapping[rtd$transcript_id_old,'gene_id']
+}
+
+rtd$gene_id_old <- NULL
+rtd$transcript_id_old <- NULL
+if(!is.null(prefix_gene)){
+  rtd$gene_id <- paste0(prefix_gene,'_',rtd$gene_id)
+  rtd$transcript_id <- paste0(prefix_gene,'_',rtd$transcript_id)
+}
+
+rtd <- sort(rtd,by = ~ seqnames + start + end)
+
+message('Step 4: Summary the merged RTD')
+
+###---> transcript per gene
+n <- as.character(c(1:20,'>20'))
+diversity <- lapply(list(ref=ref,inf=inf,merged=rtd), function(gr){
+  trans2gene <- data.frame(TXNAME=gr$transcript_id,GENEID=gr$gene_id)
+  trans2gene <- trans2gene[!duplicated(trans2gene),]
+  idx <- table(table(trans2gene$GENEID))
+  if(max(as.numeric(names(idx))) > 20){
+    idx1 <- idx[as.numeric(names(idx))<=20]
+    idx2 <- sum(idx[as.numeric(names(idx))>20])
+    names(idx2) <- '>20'
+    idx <- c(idx1,idx2)
+  }
+  num <- rep(0,length(n))
+  names(num) <- n
+  num[names(idx)] <- idx
+  num
+})
+
+transpergene <- do.call(cbind,diversity)
+transpergene <- data.frame(TransPerGene=rownames(transpergene),transpergene,row.names = NULL)
+colnames(transpergene) <- c('TransPerGene',prefix_ref,prefix_inf,'merged')
+write.csv(transpergene,
+          file=file.path(data_dir,paste0('htsm_rtd_',prefix_ref,'_', prefix_inf,
+                                         '_transcript_per_gene_number.csv')),
+          row.names = F)
+
+data2plot <- transpergene[,-1]
+rownames(data2plot) <- transpergene[,1]
+data2plot <- t(data2plot)
+
+png(file.path(data_dir,
+              paste0('htsm_rtd_',prefix_ref,'_',prefix_inf,'_transcript_per_gene_number.png')),
+    width = 10,height = 5,res = 300,units = 'in')
+xx <- barplot(data2plot,beside = TRUE,
+              col =  c("#999999", "#E69F00", "#56B4E9"),
+              ylim=c(0,1.2*max(data2plot)),
+              xlab = 'Transcripts in a gene',
+              ylab = 'Genen number',
+              main='Transcript number per gene',
+              space=c(0,0.5))
+## Add text at top of bars
+text(x = xx, y = data2plot, label = data2plot, cex = 0.7, col = "red",
+     srt=-90,adj=c(1.1,0.5))
+legend("topright",
+       legend = rownames(data2plot),
+       fill = c("#999999", "#E69F00", "#56B4E9"))
+dev.off()
+
+
+pdf(file.path(data_dir,
+              paste0('htsm_rtd_',prefix_ref,'_',prefix_inf,'_transcript_per_gene_number.pdf')),
+    width = 10,height = 5)
+xx <- barplot(data2plot,beside = TRUE,
+              col =  c("#999999", "#E69F00", "#56B4E9"),
+              ylim=c(0,1.2*max(data2plot)),
+              xlab = 'Transcripts in a gene',
+              ylab = 'Genen number',
+              main='Transcript number per gene',
+              space=c(0,0.5))
+
+## Add text at top of bars
+text(x = xx, y = data2plot, label = data2plot, cex = 0.7, col = "red",
+     srt=-90,adj=c(1.1,0.5))
+legend("topright",
+       legend = rownames(data2plot),
+       fill = c("#999999", "#E69F00", "#56B4E9"))
+dev.off()
+
+###---> basic statistics
+stat_merged <- rtdSummary(gr = rtd)
+stat_ref <- rtdSummary(gr = ref)
+stat_inf <- rtdSummary(gr = inf)
+stat <- cbind(stat_ref,stat_inf,stat_merged)
+colnames(stat) <- c(prefix_ref,prefix_inf,'merged')
+
+write.csv(stat,file=file.path(data_dir,paste0('htsm_rtd_',prefix_ref,'_', prefix_inf,'_merged_summary.csv')))
+message('Step 5: Save the results')
+
+export(object = rtd,
+       con = file.path(data_dir,paste0('htsm_rtd_',prefix_ref,'_', prefix_inf,'_merged.gtf')))
+# export_gtf(gr = rtd,file2save = file.path(data_dir,paste0('htsm_rtd_',prefix_ref,'_', prefix_inf,'_merged.gtf')))
+# save(rtd,file = file.path(data_dir,paste0('htsm_rtd_',prefix_ref,'_', prefix_inf,'_merged.RData')))
+# save(inf_trans_list,file=file.path(data_dir,paste0(prefix_inf,'_trans_summary.RData')))
+
+#######################
+###---> save to bed file
+exon <- rtd
+mapping <- data.frame(TXNAME = exon$transcript_id,GENEID = exon$gene_id)
+mapping <- mapping[!duplicated(mapping),]
+rownames(mapping) <- mapping$TXNAME
+
+exon <- GenomicRanges::split(exon,exon$transcript_id)
+bed <- rtracklayer::asBED(exon)
+
+blocks <- bed$blocks
+bed$blocks <- NULL
+strand_info <- as.character(strand(bed))
+strand_info[strand_info == "*"] <- NA
+
+df <- data.frame(seqnames = seqnames(bed),
+                 start = start(bed) - 1,
+                 end = end(bed),
+                 names = paste0(mapping[bed$name,'GENEID'],';',bed$name),
+                 score = 0,
+                 strand = strand_info,
+                 thickStart = start(bed) - 1,
+                 thickEnd = end(bed),
+                 itemRgb = 1,
+                 blockCount = elementNROWS(blocks),
+                 blockSizes = unlist(lapply(width(blocks), paste, collapse = ","), use.names = FALSE),
+                 blockStarts = unlist(lapply(start(blocks) - 1, paste, collapse = ","), use.names = FALSE))
+rownames(df) <- NULL
+
+message('Export bed file ...')
+write.table(df, file = file.path(data_dir,paste0('htsm_rtd_',prefix_ref,'_', prefix_inf,'_merged.bed')),
+            sep = "\t", col.names = FALSE,
+            row.names = FALSE, quote = FALSE, na = ".")
+
+write.csv(mapping, file = file.path(data_dir,paste0('htsm_rtd_',prefix_ref,'_', prefix_inf,'_merged_trans_gene_mapping.csv')),
+          row.names = FALSE)
+
+message('Done: ',Sys.time())
+end.time <- Sys.time()
+time.taken <- end.time - start.time
+message(paste('Time for analysis:',round(time.taken,3),attributes(time.taken)$units),'\n')
+```
+
+<a href='#table-of-contents'>Go back to Table of contents</a>
+
+Barley PanBaRT20
+-----------
+
+
+### Construction of linear pan-genome
+
+```
+Miriam's scripts of linear pan-genome
+
+```
+
+
+### Map GsRTDs to linear pan-genome
+
+Minimap2 v2.24 (Li, 2018) was used for the gene/transcript mapping: 
+
+  -   Step 1: Mapping of GsRTD gene sequences (encompassing exons and introns) to the linear pan-genome.
+  -   Step 2: Mapping of GsRTD transcript sequences to the specific region on the linear pan-genome where their corresponding genes are located. This two-step process ensures that transcripts from the same gene are not mapped to different gene loci, preventing potential errors. 
+
+```
+# genome_fasta: the linear pan-genome fasta file
+# trans_fasta: the gene or transcript sequence fasta files in above two steps.
+# output_sam: the output sam file. 
+
+minimap2 \
+-t 16 \
+-G 15,000 \
+-L \
+--secondary=no \
+--MD \
+-ax splice:hq -uf $genome_fasta $trans_fasta > $output_sam
+
+prefix=${output_sam%.*}
+samtools view -Sb -F 2048 ${prefix}.sam > ${prefix}.bam
+samtools sort ${prefix}.bam > ${prefix}_sorted.bam
+
+bedtools bamtobed -bed12 -i ${prefix}_sorted.bam > ${prefix}.bed
+bedToGenePred ${prefix}.bed ${prefix}.genepred
+genePredToGtf "file" ${prefix}.genepred ${prefix}.gtf
+```
+
+### Gene and trasncript association between PanBaRT20 and GsRTDs
+
+In-house R scripts were used to generate the association and the look-up table between PanBaRT20 and GsRTDs. 
+
+  - Step 1: Based on the GsRTD transcript mapping on the linear pan-genome, the transcripts were grouped by overlap-layout-consensus. (1) The overlapped transcripts were assigned with the same gene ID. (2) The multiple-exon transcripts with identical intron combinations but different TSS or TES were merged to be one PanBaRT20 transcript and the longest TSS and TES were used as the starting and ending point of this transcript. The overlapped mono-exon transcripts were all merged into one PanBaRT20 transcript. 
+  - Step 2: Refine gene IDs in the PanBaRT20. (1) If two overlapped transcript sets only overlap 5% of their lengths, they were treated as different genes and assigned with different IDs. (2) If an overlapped transcript set was included entriely within the intron region of another transcript set, they were treated as different genes and assigned with different IDs. 
+
+Thus, each transcripts in PanBaRT20 represent a set of GsRTD transcripts and we used this information to generate a look-up table between PanBaRT20 and GsRTDs. 
+
+```
+#######################################
+##---> R code of step 1
+
+# gtf_file: the output from previous minimap2 result, which mapped the GsRTD transcripts to the linear pan-genome.
+
+
+library(rtracklayer)
+gr <- import(gtf_file)
+###############
+###---> mutli exon transcripts
+multi_trans <- getMultiExonTrans(gr)
+intron_chain <- getIntronChain(multi_trans)
+multi_trans$group <- intron_chain[multi_trans$transcript_id] 
+multi_trans_group <- GenomicRanges::split(multi_trans$transcript_id,multi_trans$group)
+multi_trans_group <- lapply(multi_trans_group, unique)
+
+multi_trans_split <- GenomicRanges::split(multi_trans,multi_trans$group)
+multi_trans_split <- reduce(multi_trans_split)
+multi_trans <- unlist(multi_trans_split)
+multi_trans$type <- 'exon'
+multi_trans$gene_id <- names(multi_trans)
+multi_trans$transcript_id <- names(multi_trans)
+names(multi_trans) <- NULL  
+# export(multi_trans,'multi_trans.gtf')
+
+###---> mono exon transcripts
+mono_trans <- getMonoExonTrans(gr)
+mcols(mono_trans) <- mcols(mono_trans)[,c('type','gene_id','transcript_id')]
+mono_loci <- getOverlapRange(mono_trans)
+hits <- findOverlaps(query = mono_trans,subject = mono_loci,type = 'within')
+mono_trans <- mono_trans[hits@from]
+mono_trans$group <- mono_loci[hits@to]$gene_id
+mono_trans <- unique(mono_trans)
+
+mono_trans_group <- split(mono_trans$transcript_id,mono_trans$group)
+mono_trans_group <- lapply(mono_trans_group, unique)
+
+mono_trans_split <- GenomicRanges::split(mono_trans,mono_trans$group)
+mono_trans_split <- reduce(mono_trans_split)
+mono_trans <- unlist(mono_trans_split)
+mono_trans$type <- 'exon'
+mono_trans$gene_id <- names(mono_trans)
+mono_trans$transcript_id <- names(mono_trans)
+names(mono_trans) <- NULL 
+
+trans_group <- c(mono_trans_group,multi_trans_group)
+trans_group <- sapply(trans_group, function(x) paste0(unique(x),collapse = ';'))
+names(trans_group) <- paste0('trans-',names(trans_group))
+
+gr_collapsed <- c(multi_trans,mono_trans)
+gr_collapsed$transcript_id <- paste0('trans-',gr_collapsed$transcript_id)
+gr_collapsed <- sort(gr_collapsed,by = ~ seqnames + start + end)
+gr_collapsed$source_trans <- trans_group[gr_collapsed$transcript_id]
+
+#######################################
+##---> R code of step 2
+
+gr <- gr_collapsed
+## record original gene and transcript id
+gr$gene_id0 <- gr$gene_id
+gr$transcript_id0 <- gr$transcript_id
+gr$observation <- NA
+
+trans_range <- getTransRange(gr)
+hits <- findOverlaps(query = trans_range,subject = trans_range)
+idx <- which(queryHits(hits)!=subjectHits(hits))
+hits <- hits[idx,]
+
+## get the overlaps < chimeric_tolerance
+message('Refine chimeric genes')
+gr1 <- trans_range[queryHits(hits)]
+gr2 <- trans_range[subjectHits(hits)]
+overlaps <- pintersect(gr1,gr2)
+overlaps$pair1 <- gr1$transcript_id
+overlaps$pair2 <- gr2$transcript_id
+
+p1 <- width(overlaps)/width(gr1)
+p2 <- width(overlaps)/width(gr2)
+idx <- which(p1 < chimeric_tolerance & p2 < chimeric_tolerance)
+
+if(length(idx) > 0){
+  chemric <- overlaps[idx]
+  
+  # names(chemric) <- chemric$transcript_id
+  pair1 <- GenomicRanges::split(chemric,chemric$pair1)
+  pair1 <- reduce(pair1)
+  pair1 <- unlist(pair1)
+  pair1$transcript_id <- names(pair1)
+  names(pair1) <- NULL
+  
+  #chr1H:99,372,722-99,380,409
+  pair2 <- GenomicRanges::split(chemric,chemric$pair2)
+  pair2 <- reduce(pair2)
+  pair2 <- unlist(pair2)
+  pair2$transcript_id <- names(pair2)
+  names(pair2) <- NULL
+  
+  chemric <- c(pair1,pair2)
+  chemric <- sort(chemric,by = ~ seqnames + start + end)
+  gr_chemric <- gr[gr$transcript_id %in% chemric$transcript_id]
+  gr_no_chemric <- gr[!(gr$transcript_id %in% chemric$transcript_id)]
+  # export(chemric,'chemricchemric.gtf')
+  
+  chemric <- GenomicRanges::split(chemric,chemric$transcript_id)
+  chemric <- chemric[gr_chemric$transcript_id]
+  gr_chemric_cut <- psetdiff(gr_chemric,chemric)
+  gr_chemric_cut <- unlist(gr_chemric_cut)
+  gr_chemric_cut$transcript_id <- names(gr_chemric_cut)
+  names(gr_chemric_cut) <- NULL
+  gr_chemric_cut$gene_id <- gr_chemric_cut$transcript_id
+  gr_chemric_cut$type <- 'exon'
+  
+  gr_cut <- c(gr_chemric_cut,gr_no_chemric)
+  gr_cut <- sort(gr_cut,by = ~ seqnames + start + end)
+  gr_cut <- assignGeneID(gr = gr_cut)
+  mapping <- data.frame(transcript_id=gr_cut$transcript_id,
+                        gene_id=gr_cut$gene_id)
+  mapping <- unique(mapping)
+  rownames(mapping) <- mapping$transcript_id
+  gr$gene_id <- mapping[gr$transcript_id,'gene_id']
+}
+
+##################
+###---> intronic
+message('Refine intronic genes')
+gr_intronic <- getIntronicGene(query = gr,subject = gr)
+if(NROW(gr_intronic)>0){
+  gr_intronic <- assignGeneID(gr = gr_intronic)
+  gr_intronic$gene_id <- paste0('intronic-',gr_intronic$gene_id)
+  mapping <- data.frame(transcript_id=gr_intronic$transcript_id,
+                        gene_id=gr_intronic$gene_id)
+  mapping <- unique(mapping)
+  rownames(mapping) <- mapping$transcript_id
+  
+  idx <- which(gr$transcript_id %in% gr_intronic$transcript_id)
+  gr$observation[idx] <- 'intronic'
+  gr$gene_id[idx] <- mapping[gr$transcript_id[idx],'gene_id']
+}
+
+#########
+##---> generate new gene ids
+message('Generate new gene ids')
+gr <- sort(gr,by = ~ seqnames + start + end)
+genes <- unique(gr$gene_id)
+
+pad_n <- length(genes)
+pad_n <- nchar(format(pad_n,scientific = FALSE))
+
+genes_n <- stringr::str_pad(string = 1:length(genes),width = pad_n,pad = '0')
+names(genes_n) <- genes
+
+gene_id <- paste0(prefix,seqnames(gr),genes_n[gr$gene_id])
+gr$gene_id <- gene_id
+
+mapping <- data.frame(transcript_id=gr$transcript_id,
+                      gene_id=gene_id)
+mapping <- unique(mapping)
+mapping <- mapping[order(mapping$gene_id),]
+n <- sequence(rle(mapping$gene_id)$lengths)
+transcript_id <- paste0(mapping$gene_id,'.',n)
+names(transcript_id) <- mapping$transcript_id
+gr$transcript_id <- transcript_id[gr$transcript_id]
+
+#############################
+###---> identify multi-exon and mono-exon transcripts
+gr_multi <- getMultiExonTrans(gr)
+idx <- which(gr$transcript_id %in% gr_multi$transcript_id)
+if(length(idx) > 0)
+  gr$observation[idx] <- paste0(gr$observation[idx],';multi-exon')
+
+gr_mono <- getMonoExonTrans(gr)
+idx <- which(gr$transcript_id %in% gr_mono$transcript_id)
+if(length(idx) > 0)
+  gr$observation[idx] <- paste0(gr$observation[idx],';mono-exon')
+
+###---> identify exonic transcripts
+trans_range <- getTransRange(gr_mono)
+hits <- findOverlaps(trans_range,gr,type = 'within')
+mapping <- data.frame(from=trans_range$transcript_id[hits@from],
+                      to=gr$transcript_id[hits@to])
+mapping <- unique(mapping)
+trans <- unique(mapping$from[mapping$from != mapping$to])
+idx <- which(gr$transcript_id %in% trans)
+if(length(idx) > 0)
+  gr$observation[idx] <- paste0(gr$observation[idx],';exonic-trans')
+
+gr$observation <- gsub('NA;','',gr$observation)
+
+export(gr,'PanBaRT20.gtf')
+write.table(mapping2, file = "GsRTD_and_PanBaRT20_match.tsv", row.names=FALSE, sep="\t")
+```
+
+
+Expression analysis
+----------
+
+### Transcript quantification
+
+Salmon v1.10.1 was used for transcript quantification.
+
+#### Salmon index
+
+```
+# fasta_file: transcript sequence file
+# index_dir: output index direcotry
+
+salmon index -t ${fasta_file} \
+-i ${index_dir} \
+-p 12 \
+-k 31 \
+--keepDuplicates
+```
+
+#### Salmon quantification
+
+```
+# index_dir: output index direcotry
+# read1: fastq file of paired-end read1
+# read2: fastq file of paired-end read2
+# output_folder: output directory
+
+salmon quant \
+-i $index_dir \
+-l ISR \
+-1 $read1 \
+-2 $read2 \
+-p 12 \
+-o $output_folder \
+--seqBias \
+--posBias \
+--gcBias \
+--validateMappings
+```
+
+### Differential expression analysis
+
+The 3D RNA-seq App was used to perform differential gene expression, differential gene alternative splicing, differential transcript expression and differential transcript usage analysis. 
 
 References
 ----------
+  -   Chen,J., Tang,X., Ren,C., Wei,B., Wu,Y., Wu,Q., and Pei,J. (2018) Full-length transcriptome sequences and the identification of putative genes for flavonoid biosynthesis in safflower. BMC Genomics, 19, 1–13.
+  -   Coulter,M., Entizne,J.C., Guo,W., Bayer,M., Wonneberger,R., Milne,L., Schreiber,M., Haaning,A., Muehlbauer,G., McCallum,N., Fuller,J., Simpson,C., Stein,N., Brown,J.W.S., Waugh,R., and   -     -   Zhang,R. (2022) BaRTv2: A highly resolved barley reference transcriptome for accurate transcript‐specific RNA‐seq quantification. Plant J., 111, 1183–1202.
+  -   Dobin,A., Davis,C.A., Schlesinger,F., Drenkow,J., Zaleski,C., Jha,S., Batut,P., Chaisson,M., and Gingeras,T.R. (2013) STAR: Ultrafast universal RNA-seq aligner. Bioinformatics, 29, 15–21.
+  -   Dobin,A. and Gingeras,T.R. (2015) Mapping RNA-seq Reads with STAR. Curr. Protoc. Bioinforma., 51, 11.14.1-11.14.19.
+Entizne,J.C., Guo,W., Calixto,C.P., Spensley,M., Tzioutziou,N.,   -   Zhang,R., and Brown,J.W. (2020) TranSuite: a software suite for accurate translation and characterization of transcripts. bioRxiv, 2020.12.15.422989.
+  -   Guo,W., Tzioutziou,N.A., Stephen,G., Milne,I., Calixto,C.P.G., Waugh,R., Brown,J.W.S., and Zhang,R. (2021) 3D RNA-seq: a powerful and flexible tool for rapid and accurate differential expression and alternative splicing analysis of RNA-seq data for biologists. RNA Biol., 18, 1574–1587.
+  -   Jayakodi,M., Padmarasu,S., Haberer,G., Bonthala,V.S., Gundlach,H., Monat,C., Lux,T., Kamal,N., Lang,D., Himmelbach,A., Ens,J., Zhang,X.Q., Angessa,T.T., Zhou,G., Tan,C., Hill,C., Wang,P.,   -   Schreiber,M., Boston,L.B., et al. (2020) The barley pan-genome reveals the hidden legacy of mutation breeding. Nature, 588, 284–289.
+  -   Kuo,R.I., Cheng,Y., Zhang,R., Brown,J.W.S., Smith,J., Archibald,A.L., and Burt,D.W. (2020) Illuminating the dark side of the human transcriptome with long read transcript sequencing. BMC Genomics, 21, 1–22.
+  -   Li,H. (2018) Minimap2: pairwise alignment for nucleotide sequences. Bioinformatics, 34, 3094–3100.
+Patro,R., Duggal,G., Love,M.I., Irizarry,R.A., and Kingsford,C. (2017) Salmon provides fast and bias-aware quantification of transcript expression. Nat. Methods, 14, 417–419.
+  -   Pertea,M., Pertea,G.M., Antonescu,C.M., Chang,T.-C., Mendell,J.T., and Salzberg,S.L. (2015) StringTie enables improved reconstruction of a transcriptome from RNA-seq reads. Nat. Biotechnol., 33, 290–295.
+  -   Quevillon,E., Silventoinen,V., Pillai,S., Harte,N., Mulder,N., Apweiler,R., and Lopez,R. (2005) InterProScan: Protein domains identifier. Nucleic Acids Res., 33, W116.
+  -   Shao,M. and Kingsford,C. (2017) Accurate assembly of transcripts through phase-preserving graph decomposition. Nat. Biotechnol., 35, 1167–1169.
+  -   Wang,J., Yang,W., Zhang,S., Hu,H., Yuan,Y., Dong,J., Chen,L., Ma,Y., Yang,T., Zhou,L., Chen,J., Liu,B., Li,C., Edwards,D., and Zhao,J. (2023) A pangenome analysis pipeline provides insights into functional gene identification in rice. Genome Biol., 24, 1–22.
 
--   Bray,N.L., Pimentel,H., Melsted,P., and Pachter,L. (2016) Near-optimal probabilistic RNA-seq quantification. Nat. Biotechnol., 34, 525–527.
--   Calixto,C.P.G., Guo,W., James,A.B., Tzioutziou,N.A., Entizne,J.C., Panter,P.E., Knight,H., Nimmo,H.G., Zhang,R., and Brown,J.W.S. (2018) Rapid and Dynamic Alternative Splicing Impacts the Arabidopsis Cold Response Transcriptome. Plant Cell, 30, 1424–1444.
--   Guo,W., Tzioutziou,N., Stephen,G., Milne,I., Calixto,C., Waugh,R., Brown,J.W., and Zhang,R. (2019) 3D RNA-seq - a powerful and flexible tool for rapid and accurate differential expression and alternative splicing analysis of RNA-seq data for biologists. bioRxiv, 656686. doi: https://doi.org/10.1101/656686.
--   Patro,R., Duggal,G., Love,M.I., Irizarry,R.A., and Kingsford,C. (2017) Salmon provides fast and bias-aware quantification of transcript expression. Nat. Methods, 14, 417–419.
--   Ritchie,M.E., Phipson,B., Wu,D., Hu,Y., Law,C.W., Shi,W., and Smyth,G.K. (2015) limma powers differential expression analyses for RNA-sequencing and microarray studies. Nucleic Acids Res, 43, e47.
--   Robinson,M.D., McCarthy,D.J., and Smyth,G.K. (2010) edgeR: a Bioconductor package for differential expression analysis of digital gene expression data. Bioinformatics, 26, 139–40.
 
 <a href='#table-of-contents'>Go back to Table of contents</a>
 
