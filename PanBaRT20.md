@@ -1561,8 +1561,38 @@ Barley PanBaRT20
 
 ### Construction of linear pan-genome
 
+The PSVCP method (https://github.com/wjian8/psvcp_v1.01) was used to generate linear barley pan-gemoe. Precisely, the Morex reference genome served as the reference, and through an iterative process, 19 additional genomes were progressively integrated to build a comprehensive linear pan-genome. The order of the integration: 
+
+| Order | Barley   reference genome                                                         |
+|-------|-----------------------------------------------------------------------------------|
+| 0     | 210316_Morex_V3_pseudomolecules_and_unplaced_scaffolds_ENA.fasta.gz               |
+| 1     | 220812_FT11_pseudomolecules_and_unplaced_contigs_CPclean.fasta.gz                 |
+| 2     | 220214_Golden_Promise_pseudomolecules_and_unplaced_contigs_CPclean.fasta.gz       |
+| 3     | 220503_HOR_8148_pseudomolecules_and_unplaced_contigs_CPclean.fasta.gz             |
+| 4     | 220816_RGT_Planet_pseudomolecules_and_unplaced_contigs_CPclean.fasta.gz           |
+| 5     | 220613_HOR_21599_pseudomolecules_and_unplaced_contigs_CPclean.fasta.gz            |
+| 6     | 220518_HOR_13821_pseudomolecules_and_unplaced_contigs_CPclean.fasta.gz            |
+| 7     | 220613_OUN333_pseudomolecules_and_unplaced_contigs_CPclean.fasta.gz               |
+| 8     | 220519_HOR_3365_pseudomolecules_and_unplaced_contigs_CPclean.fasta.gz             |
+| 9     | 220503_HOR_9043_pseudomolecules_and_unplaced_contigs_CPclean.fasta.gz             |
+| 10    | 220613_HOR_10350_pseudomolecules_and_unplaced_contigs_CPclean.fasta.gz            |
+| 11    | 220519_HOR_13942_pseudomolecules_and_unplaced_contigs_CPclean.fasta.gz            |
+| 12    | 220816_Akashinirki_pseudomolecules_and_unplaced_contigs_CPclean.fasta.gz          |
+| 13    | 220503_HOR_7552_pseudomolecules_and_unplaced_contigs_CPclean.fasta.gz             |
+| 14    | 220816_Du_Li_Huang_ZDM01467_pseudomolecules_and_unplaced_contigs_CPclean.fasta.gz |
+| 15    | 220411_HOR_3081_pseudomolecules_and_unplaced_contigs_CPclean.fasta.gz             |
+| 16    | 211124_Barke_pseudomolecules_and_unplaced_contigs_CPclean.fasta.gz                |
+| 17    | 220810_Igri_pseudomolecules_and_unplaced_contigs_CPclean.fasta.gz                 |
+| 18    | 220809_Hocket_pseudomolecules_and_unplaced_contigs_CPclean.fasta.gz               |
+| 19    | 220809_Chiba_ZDM02064_pseudomolecules_and_unplaced_contigs_CPclean.fasta.gz       |
+
+
 ```
-Miriam's scripts of linear pan-genome
+python3 $path_of_the_pipeline/Construct_pan_and_Call_sv.py 
+    genome_gff_dir 
+    genome_list 
+    -fqd fq_dir 
+    -o population_hmp
 
 ```
 
