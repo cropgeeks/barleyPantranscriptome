@@ -1,0 +1,3 @@
+[submodule "PanBarleyNetworks"]
+	path = PanBarleyNetworks
+	url = https://github.com/vanda-marosi/PanBarleyNetworks.git
