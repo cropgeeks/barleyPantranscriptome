@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+  <html lang='en'>
+  <head>
+  <meta charset='utf-8'>
+  <meta name='viewport' content='width=device-width, initial-scale=1'>
+
+  <link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css'>
+  <link rel='stylesheet' href='stylesheet/eorna.css'>
+
+  <title>Morex Gene Atlas - Transcript Relationship Lookup</title>
+
+  <script src='https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js'></script>
+  <script src='https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js'></script>
+  <script src='https://cdn.plot.ly/plotly-latest.min.js'></script>
+
+    </head>
+    
+    <body class='body-pos' data-spy='scroll' data-target='#list-data' data-offset='35' id='content'>
+
+        <div class="container-fluid">
+            <div class="row">
+
+
+                <nav class="col-md-2 d-none d-md-block grey sidebar">
+                    <div class="sidebar-sticky">
+                        <ul class="nav flex-column">
+                            <li class="nav-item nav-link"  id="nav-title"><img class='img-fluid' src='images/morexgeneatlas-logo.png' width=150'></li>
+                            <li class="nav-item nav-link"  id="nav-header"><b>Utilities Menu</b></li>
+                            <div class="list-group">
+                            <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+                            <li class="nav-item"><a class="nav-link" href="blast.html">Homology Search</a></li>
+                            <li class="nav-item"><a class="nav-link" href="keyword.html">Annotation Search</a></li>
+                            <li class="nav-item"><a class="nav-link" href="download.html">Bulk Data Download</a></li>
+                            <li class="nav-item"><a class="nav-link active" href="relator.html">Transcriptome Relationships</a></li>
+
+                            </div>
+                            <li class="nav-item nav-link"  id="nav-title"></li>
+                            <li class="nav-item nav-link"  id="nav-header"><b>Links</b></li>
+                            <li class="nav-item nav-link"  id="nav-title"></li>
+                            <li class='nav-item'><a class='nav-link ext-links' href='contact.html'>Citation / About Authors</a></li>
+                            <li class="nav-item"><a class="nav-link ext-links" href='http://ics.hutton.ac.uk/eorna/index.html'>EORNA Website</a></li>
+                            <li class="nav-item"><a class="nav-link ext-links" href='http://ics.hutton.ac.uk/barleyrtd'>BarleyRTD Website</a></li>
+                            <li class="nav-item"><a class="nav-link ext-links" href='http://ics.hutton.ac.uk'>Information and Computing Sciences @Hutton</a></li>
+                            <li class="nav-item"><a class="nav-link ext-links" href='http://www.hutton.ac.uk'>The James Hutton Institute</a></li>
+                            <li class="nav-item"><a class="nav-link ext-links" href='https://www.barleyhub.org/'>International Barley Hub</a></li>
+                            <li class="nav-item nav-link"  id="nav-title"></li>
+
+                        </ul>
+                    </div>
+                </nav>
+
+                <main role="main" class="col-md-9 ml-sm-auto col-lg-10 pt-3 px-4">
+
+                    <div class='data-header'>Transcriptome Relationships</div>
+                    <br>
+                    <div class='data-body'>
+                        <p>The relationship between the eight barley transcriptome datasets based on their location on the <a download href="downloads/210316_Morex_V3_pseudomolecules_and_unplaced_scaffolds_ENA.zip">Morex Reference Genome</a> can be accessed here. You can use this webpage to translate a list of gene IDs to the equivalent locations on the <a download href="downloads/210316_Morex_V3_pseudomolecules_and_unplaced_scaffolds_ENA.zip">Morex Reference Genome</a> for all other transcriptome datasets.</p>
+                        <p>These comparisons between the various barley transcriptomes were produced by first using <a href='https://pubmed.ncbi.nlm.nih.gov/27008021/'>GMAP</a> to map the transcriptomes against the Morex Reference Genome assembly and generate locations. The GMAP mapping was run with parameters restricting the results to the single best match with 90% sequence identity and 80% transcript coverage. Then <a href='https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7222033/'>gffcompare</a> was used to compare the GMAP locations of the transcriptomes to the locations of the reference transcript dataset (HvMxRTD annotation). </p>
+
+                        <p>The eight barley transcriptomes included here are as follows:</p>
+
+                        <table class='table-bordered' width='100%'><tbody><th>Dataset</th><th>Dataset description</th><th>#Transcripts</th><th>#Transcripts mapped</th><th>Nomenclature example</th></tr>
+                            <tbody>
+                                <tr><td>MLOCs</td><td>From RNA-seq of 8 tissues mapped to Morex WGS assembly</td><td>154,788</td><td>143,968</td><td>MLOC_54382.1</td></tr>
+                                <tr><td>JLOCs</td><td>From RNA-seq of 16 tissues mapped to Morex WGS assembly</td><td>77,360</td><td>72,601</td><td>JLOC1_22150.1</td></tr>
+                                <tr><td>HORVUv1</td><td>-</td><td>334,126</td><td>304,919</td><td>HORVU1Hr1G000020.1</td></tr>
+                                <tr><td>HORVUv3</td><td>-</td><td>83,990</td><td>78,895</td><td>HORVU.MOREX.r3.1HG0004350.1</td></tr>
+                                <tr><td>BARTv1</td><td>From a range of tissues, cultivars and abiotic treatments and transcripts assembled and <br>aligned to the <a href="https://pubmed.ncbi.nlm.nih.gov/28447635/">barley cv. Morex reference genome, 2017</a> (<a href='https://bmcgenomics.biomedcentral.com/articles/10.1186/s12864-019-6243-7'>Published paper</a>).</td><td>177,240</td><td>167,380</td><td>BART1_0-u00498.001</td></tr>
+                                <tr><td>BARTv2</td><td>Barley RTD based on the Barke genome assembly</td><td>148,260</td><td>145,220</td><td>BaRT2v18chr1HG009360.2</td></tr>
+                                <tr><td>MorexGS</td><td>Morex Genome Specific Transcriptome - as part of the Barley Pangenome project</td><td>109,587</td><td>107,855</td><td>Morex_chr7HG34181.4</td></tr>
+                                <tr><td>PanBaRT20</td><td>Barley Pantranscriptome - as part of the Barley Pangenome project</td><td>581,977</td><td>568,766</td><td>chr1H00001.1</td></tr>
+                                <tr><td>HvMxRTD</td><td>Morex Transcriptome RTD - all available Morex RNA-seq mapped to the Morex genome</td><td>149,850</td><td>149,850</td><td>Hv_Mx_chr1HG07237.1</td></tr>
+                            </tbody>
+                        </table>
+
+
+                        <br>
+
+                    <form action='relator.cgi' method='post'>
+                        <div class='card'>
+                            <div class='header data-header'>
+                                <span for="sequence">Please paste a list of barley gene IDs - one per line</span>
+                            </div>
+                            <div class='card-body'>
+                                <div class="form-group">
+                                    <textarea class="form-control sequence-text" name='list' rows="15" id="sequence">BaRT2v18chr1HG002370
+HORVU1Hr1G000020
+HORVU.MOREX.r3.1HG0004350
+HORVU1Hr1G004000
+JLOC1_22150
+MLOC_54382
+BART1_0-u00498
+BaRT2v18chr1HG009360
+Hv_Mx_chr1HG08200 
+Morex_chr1HG05812 
+chr1H01860
+</textarea>
+                                </div>
+
+                                <input class='btn btn-secondary red-btn' type='submit' value='Go'>
+
+                            
+                            </div>
+                        </div>
+                    </form>
+                    </div>
+                </main>
+    </div>
+</div>
+</body></html>

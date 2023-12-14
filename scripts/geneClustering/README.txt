@@ -1,0 +1,1 @@
+This script is used to filter gene duplication clusters. It reads gene clustering results and gene info (coordinates and strand) as input files. It outputs a table of gene clusters in tandem, cluster range and number of genes in the cluster.

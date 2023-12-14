@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+  <html lang='en'>
+  <head>
+  <meta charset='utf-8'>
+  <meta name='viewport' content='width=device-width, initial-scale=1'>
+
+  <link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css'>
+  <link rel='stylesheet' href='stylesheet/eorna.css'>
+
+  <title>Morex Gene Atlas - Home</title>
+
+  <script src='https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js'></script>
+  <script src='https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js'></script>
+  <script src='https://cdn.plot.ly/plotly-latest.min.js'></script>
+
+    </head>
+    
+    <body class='body-pos' data-spy='scroll' data-target='#list-data' data-offset='0' id='content'>
+
+        <div class="container-fluid">
+            <div class="row">
+
+
+                <nav class="col-md-2 d-none d-md-block sidebar grey">
+                    <div class="sidebar-sticky">
+                        <ul class="nav flex-column">
+                            <li class="nav-item nav-link"  id="nav-title"><span class='app-title'><img class='img-fluid' src='images/morexgeneatlas-logo.png' width=150'></li>
+                            <li class="nav-item nav-link"  id="nav-header"><b>Utilities Menu</b></li>
+                            <div class="list-group">
+                            <li class="nav-item"><a class="nav-link active" href="index.html">Home</a></li>
+                            <li class="nav-item"><a class="nav-link" href="blast.html">Homology Search</a></li>
+                            <li class="nav-item"><a class="nav-link" href="keyword.html">Annotation Search</a></li>
+                            <li class="nav-item"><a class="nav-link" href="download.html">Bulk Data Download</a></li>
+                            <li class="nav-item"><a class="nav-link active" href="relator.html">Transcriptome Relationships</a></li>
+                            </div>
+                            <li class="nav-item nav-link"  id="nav-title"></li>
+                            <li class="nav-item nav-link"  id="nav-header"><b>Links</b></li>
+                            <li class="nav-item nav-link"  id="nav-title"></li>
+                            <li class="nav-item"><a class="nav-link ext-links" href='contact.html'>Citation / About Authors</a></li>
+                            <li class="nav-item"><a class="nav-link ext-links" href='http://ics.hutton.ac.uk/eorna/index.html'>EORNA Website</a></li>
+                            <li class="nav-item"><a class="nav-link ext-links" href='http://ics.hutton.ac.uk/barleyrtd'>BarleyRTD Website</a></li>
+                            <li class="nav-item"><a class="nav-link ext-links" href='http://ics.hutton.ac.uk'>Information and Computing Sciences @Hutton</a></li>
+                            <li class="nav-item"><a class="nav-link ext-links" href='http://www.hutton.ac.uk'>The James Hutton Institute</a></li>
+                            <li class="nav-item"><a class="nav-link ext-links" href='https://www.barleyhub.org/'>International Barley Hub</a></li>
+                            <li class="nav-item nav-link"  id="nav-title"></li>
+
+                        </ul>
+                    </div>
+                </nav>
+
+                <main role="main" class="col-md-9 ml-sm-auto col-lg-10 pt-3 px-4">
+
+                    <div class='data-body'>
+
+                        <div class="card-deck  mb-3">
+                        <div class='card grey-card'>
+                            <div class='card-header option-header'>Introduction</div>
+                            <div class='card-body'>
+                                <p><font color='#5c5f58'><b>Morex Gene Atlas</b></font> is a Barley Expression Database that displays gene and transcript abundance data on demand as transcripts per million (TPM) across all samples and all the genes in the Morex Reference Transcript Dataset</a> (HvMxRTD). </p> 
+                                
+                                <p>This website is based on <a href="https://ics.hutton.ac.uk/eorna/index.html">EoRNA</a>.</p>
+
+                                <p>
+                                You can access data directly by searching for a particular sequence ID or by BLASTing a nucleotide or protein sequence against the <a download href="downloads/210316_Morex_V3_pseudomolecules_and_unplaced_scaffolds_ENA.zip">Morex Reference Genome</a> or the HvMxRTD transcript sequences using the <a href='blast.html'>BLAST page</a>. Alternatively, you can use use keywords to search the GO annotations of the translated proteins of the HvMxRTD transcripts via the <a href='keyword.html'>Annotation Search</a> page.</p>
+                            </div>
+                        </div>
+
+                        
+                            <div class="card grey-card">
+                                <div class="card-header option-header">Search for a Sequence by ID</div>
+                                <div class="card-body">
+                                <p>Currently <font color='#5c5f58'><b>Morex Gene Atlas</b></font> contains the HvMxRTD transcripts (<a href=''>publication here</a>).</p>
+
+                                <p>The predicted genes have nomenclature like "Hv_Mx_chr1HG02979". Transcript models are named after the the gene loci with a number appended, like "Hv_Mx_chr1HG02979.10". 
+
+                                <p>Searching for a gene ID will return all the transcript models from that gene region. You can go directly to a gene or transcript by using this search box:</p>
+
+                                <form action='search_ids.cgi' method='get'>
+                                    <div class="input-group mb-3">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">Search for Sequence ID</span>
+                                        </div>
+                                        <input type="text" class="form-control" name='seq_name' value='Hv_Mx_chr1HG02979' onfocus="this.value=''">
+                                        <div class="input-group-append"><input class='btn btn-secondary red-btn' type='submit' value='Search'></div>
+                                    </div>
+                                    
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-deck mb-3">
+                            <div class="card red-card">
+                                <div class="card-header option-header">BLAST Search</div>
+                                <div class="card-body">
+                                    Use a nucleotide or protein sequence to find similar transcripts or genome sequence with the online BLAST search form.
+                                </div>
+                                <div class="card-footer red-footer"><a href="blast.html" class='btn btn-secondary red-btn'>Go</a></div>
+                            </div>
+                            <div class="card red-card">
+                                <div class="card-header option-header">Annotation Search</div>
+                                <div class="card-body">
+                                    Search the annotation of the HvMxRTD transcripts using keywords. The annotation was created using PANNZER and BLAST.
+                                </div>
+                                <div class="card-footer red-footer"><a href="keyword.html" class='btn btn-secondary red-btn'>Go</a></div>
+                            </div>
+                            <div class="card red-card">
+                                <div class="card-header option-header">Bulk Download</div>
+                                <div class="card-body">
+                                    Download the full datasets, including transcript sequences, GFF files, and GO annotation.
+                                </div>
+                                <div class="card-footer red-footer"><a href="download.html" class='btn btn-secondary red-btn'>Go</a></div>
+                            </div>
+                            <div class="card red-card">
+                                <div class="card-header option-header">Transcriptome Comparison</div>
+                                <div class="card-body">
+                                    Translate a list of legacy gene IDs to their equivalent genes in other transcriptome datasets, based on their mapped locations on the Morex reference genome. </a>.
+                                </div>
+                                <div class="card-footer red-footer"><a href="relator.html" class='btn btn-secondary red-btn'>Go</a></div>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+  <html lang='en'>
+  <head>
+  <meta charset='utf-8'>
+  <meta name='viewport' content='width=device-width, initial-scale=1'>
+
+  <link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css'>
+  <link rel='stylesheet' href='stylesheet/eorna.css'>
+
+
+  <title>Morex Gene Atlas - Keyword Search</title>
+
+  <script src='https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js'></script>
+  <script src='https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js'></script>
+  <script src='https://cdn.plot.ly/plotly-latest.min.js'></script>
+
+    </head>
+    
+    <body class='body-pos' data-spy='scroll' data-target='#list-data' data-offset='35' id='content'>
+
+        <div class="container-fluid">
+            <div class="row">
+
+
+                <nav class="col-md-2 d-none d-md-block grey sidebar">
+                    <div class="sidebar-sticky">
+                        <ul class="nav flex-column">
+                            <li class="nav-item nav-link"  id="nav-title"><img class='img-fluid' src='images/morexgeneatlas-logo.png' width=150'></li>
+                            <li class="nav-item nav-link"  id="nav-header"><b>Utilities Menu</b></li>
+                            <div class="list-group">
+                            <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+                            <li class="nav-item"><a class="nav-link" href="blast.html">Homology Search</a></li>
+                            <li class="nav-item"><a class="nav-link active" href="keyword.html">Annotation Search</a></li>
+                            <li class="nav-item"><a class="nav-link" href="download.html">Bulk Data Download</a></li>
+                            <li class="nav-item"><a class="nav-link" href="relator.html">Transcriptome Relationships</a></li>
+                            </div>
+                            <li class="nav-item nav-link"  id="nav-title"></li>
+                            <li class="nav-item nav-link"  id="nav-header"><b>Links</b></li>
+                            <li class="nav-item nav-link"  id="nav-title"></li>
+                            <li class='nav-item'><a class='nav-link ext-links' href='contact.html'>Citation / About Authors</a></li>
+                            <li class="nav-item"><a class="nav-link ext-links" href='http://ics.hutton.ac.uk/eorna/index.html'>EORNA Website</a></li>
+                            <li class="nav-item"><a class="nav-link ext-links" href='http://ics.hutton.ac.uk/barleyrtd'>BarleyRTD Website</a></li>
+                            <li class="nav-item"><a class="nav-link ext-links" href='http://ics.hutton.ac.uk'>Information and Computing Sciences @Hutton</a></li>
+                            <li class="nav-item"><a class="nav-link ext-links" href='http://www.hutton.ac.uk'>The James Hutton Institute</a></li>
+                            <li class="nav-item"><a class="nav-link ext-links" href='https://www.barleyhub.org/'>International Barley Hub</a></li>
+                            <li class="nav-item nav-link"  id="nav-title"></li>
+
+                        </ul>
+                    </div>
+                </nav>
+
+                <main role="main" class="col-md-9 ml-sm-auto col-lg-10 pt-3 px-4">
+
+                    <div class='data-header'>Keyword Search</div>
+                    <br>
+                    <div class='data-body'>
+
+                    <form action='keyword.cgi?' method='post'>
+
+                        <!-- <h6>You can search up to 30 sequences at a time. Please enter sequences in FASTA format.</h6> -->
+
+                        <div class='card'>
+                            <div class='header data-header'>
+                                <span for="sequence">Please enter keywords to include or exclude to search the transcript annotation. </span>
+                            </div>
+                            <div class='card-body'>
+                                <div class="input-group mb-3">
+                                    <div class="input-group-prepend">
+                                        <label class="input-group-text" for="sep">Include results containing </label>
+                                        <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                                            <label class="btn btn-secondary active">
+                                              <input type="radio" name="sep" id="option1" autocomplete="off" value='OR' checked> ANY
+                                            </label>
+                                            <label class="btn btn-secondary">
+                                              <input type="radio" name="sep" id="option2" autocomplete="off" value='AND'> ALL
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="input-group mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">of these keywords :</span>
+                                    </div>
+                                    <input type="text" class="form-control" name='keywords' value=''>
+                                </div>
+                                <div class="input-group mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">and NOT any of these words :</span>
+                                    </div>
+                                    <input type='text' class="form-control" name='neg'>
+                                </div>
+
+                                <input type='hidden' name='dataset' value='HvMxRTD'>
+                                <input class='btn btn-secondary red-btn' type='submit' value='Search Annotation'>
+
+                            
+                            </div>
+                        </div>
+                    </form>
+                    </div>
+                </main>
+    </div>
+</div>
+</body></html>
