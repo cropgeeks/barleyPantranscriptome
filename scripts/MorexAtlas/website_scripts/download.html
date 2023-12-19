@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+  <html lang='en'>
+  <head>
+  <meta charset='utf-8'>
+  <meta name='viewport' content='width=device-width, initial-scale=1'>
+
+  <link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css'>
+  <link rel='stylesheet' href='stylesheet/eorna.css'>
+  <link rel='icon' href='images/eorna-mini-logo.png'>
+
+  <title>Morex Gene Atlas - Bulk Downloads</title>
+
+  <script src='https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js'></script>
+  <script src='https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js'></script>
+  <script src='https://cdn.plot.ly/plotly-latest.min.js'></script>
+
+    </head>
+    
+    <body class='body-pos' data-spy='scroll' data-target='#list-data' data-offset='35' id='content'>
+
+        <div class="container-fluid">
+            <div class="row">
+
+
+                <nav class="col-md-2 d-none d-md-block grey sidebar">
+                    <div class="sidebar-sticky">
+                        <ul class="nav flex-column">
+                            <li class="nav-item nav-link"  id="nav-title"><img class='img-fluid' src='images/morexgeneatlas-logo.png' width=150'></li>
+                            <li class="nav-item nav-link"  id="nav-header"><b>Utilities Menu</b></li>
+                            <div class="list-group">
+                            <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+                            <li class="nav-item"><a class="nav-link" href="blast.html">Homology Search</a></li>
+                            <li class="nav-item"><a class="nav-link" href="keyword.html">Annotation Search</a></li>
+                            <li class="nav-item"><a class="nav-link active" href="download.html">Bulk Data Download</a></li>
+                            <li class="nav-item"><a class="nav-link" href="relator.html">Transcriptome Relationships</a></li>
+                            </div>
+                            <li class="nav-item nav-link"  id="nav-title"></li>
+                            <li class="nav-item nav-link"  id="nav-header"><b>Links</b></li>
+                            <li class="nav-item nav-link"  id="nav-title"></li>
+                            <li class='nav-item'><a class='nav-link ext-links' href='contact.html'>Citation / About Authors</a></li>
+                            <li class="nav-item"><a class="nav-link ext-links" href='http://ics.hutton.ac.uk/eorna/index.html'>EORNA Website</a></li>
+                            <li class="nav-item"><a class="nav-link ext-links" href='http://ics.hutton.ac.uk/barleyrtd'>BarleyRTD Website</a></li>
+                            <li class="nav-item"><a class="nav-link ext-links" href='http://ics.hutton.ac.uk'>Information and Computing Sciences @Hutton</a></li>
+                            <li class="nav-item"><a class="nav-link ext-links" href='http://www.hutton.ac.uk'>The James Hutton Institute</a></li>
+                            <li class="nav-item"><a class="nav-link ext-links" href='https://www.barleyhub.org/'>International Barley Hub</a></li>
+                            <li class="nav-item nav-link"  id="nav-title"></li>
+
+                        </ul>
+                    </div>
+                </nav>
+
+                <main role="main" class="col-md-9 ml-sm-auto col-lg-10 pt-3 px-4">
+
+                    <div class='data-header'>Morex Gene Atlas Downloads</div>
+                    <br>
+                    <div class='data-body'>
+                        <p>The text files are in tab-delimited format and can be opened in Excel. To save on file sizes the individual files in <b>HvMxRTD_all_tpm_files.zip</b> have an experiment id column which relates to the experiment names in the <b>MorexAtlas_allProjects_paper_23Aug23_exp_ids.txt</b> tab-delimited file. The meta-data spreadsheet has more details of the experiments. </p>
+                        <table  class='table-bordered' width='100%'>
+                            <tbody>
+                                <tr><td class='option-header'>Description</td><td class='option-header'>Download File</td></tr>
+                                <tr><td>All TPM values from the HvMxRTD Analysis (477 MB)</td><td><a download href="downloads/hvmxrtd_all_tpm_files.zip">hvmxrtd_all_tpm_files.zip</a></td></tr>
+                                <tr><td>List of experiments names and relationship to experiment IDs in <a download href="downloads/hvmxrtd_all_tpm_files.zip">hvmxrtd_all_tpm_files.zip</a></td><td><a download href="downloads/MorexAtlas_allProjects_paper_23Aug23_exp_ids.txt">MorexAtlas_allProjects_paper_23Aug23_exp_ids.txt</a></td></tr>
+                                <tr><td>Meta-data for the RNA-seq experiments</td><td><a download href="downloads/MorexAtlas_allProjects_paper_23Aug23.xlsx">MorexAtlas_allProjects_paper_23Aug23.xlsx</a></td></tr>
+                            </tbody>   
+                        </table>
+                    </div>
+                    <div class='data-header'>HvMxRTD Downloads</div>
+                    <br>
+                    <div class='data-body'>
+                        <p>You can download the FASTA and GTF files for HvMXRTD here, plus annotation using BLAST and PANNZER</p>
+                        <table  class='table-bordered' width='100%'>
+                            <tbody>
+                                <tr><td class='option-header'>Description</td><td class='option-header'>Download File</td></tr>
+                                <tr><td>Morex Reference FASTA Sequence, used in HvMxRTD (note: large file </td><td><a download href="downloads/210316_Morex_V3_pseudomolecules_and_unplaced_scaffolds_ENA.zip">210316_Morex_V3_pseudomolecules_and_unplaced_scaffolds_ENA.zip</a></td></tr>
+                                <tr><td>HvMxRTD transcripts FASTA file, unpadded</td><td><a download href="downloads/iso_rna_hvmx_merged_fasta.zip">iso_rna_hvmx_merged_fasta.zip</a></td></tr>
+                                <tr><td>HvMxRTD transcripts GTF file, unpadded</td><td><a download href="downloads/iso_rna_hvmx_merged_gtf.zip">iso_rna_hvmx_merged_gtf.zip</a></td></tr>
+                                <tr><td>HvMxRTD protein translations, FASTA file</td><td><a download href="downloads/iso_rna_hvmx_merged_transuite_v1_transfeat_pep.zip">iso_rna_hvmx_merged_transuite_v1_transfeat_pep.zip</a></td></tr>
+                                <tr><td>HvMxRTD Top BLAST Match in Rice Predicted Peptides v7 (tab delimited)</td><td><a download href="downloads/iso_rna_hvmx_merged_vs_rice_1e10_tab.zip">iso_rna_hvmx_merged_vs_rice_1e10_tab.zip</a></td></tr>
+                                <tr><td>HvMxRTD Top BLAST Match in <i>Arabidopsis</i> Predicted Peptides v10 (tab delimited)</td><td><a download href="downloads/iso_rna_hvmx_merged_vs_tair_1e10_tab.zip">iso_rna_hvmx_merged_vs_tair_1e10_tab.zip</a></td></tr>
+                                <tr><td>HvMxRTD PANNZER Annotation (tab-delimited)</td><td><a download href="downloads/Hv_Mx.transcriptAnno.txt">Hv_Mx.transcriptAnno.txt</a></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- <div class='data-header'>Downloads for GO Analysis and Enrichment</div>
+                    <br>
+                    <div class='data-body'>
+                        <p>Instructions on how to use these files in Go Enrichment Analysis can be found <a href='go.html'>here</a>. </p>
+                        <table  class='table-bordered' width='100%'>
+                            <tbody>
+                                <tr><td class='option-header'>Description</td><td class='option-header'>Download File</td></tr>
+                                <tr><td>GO Annotation</td><td><a download href="">Not available</a></td></tr>
+                                <tr><td>BaRT_v_1_0.gmt for use in GO Enrichment</td><td><a download href="">Not available</a></td></tr>
+                            </tbody>   
+                        </table>
+                    </div> -->
+                </main>
+            </div>
+        </div>
+    </body>
+</html>
