@@ -6,7 +6,6 @@ These are organised as follows:
 - scripts/geneClustering/Gene.cluster.filter.R: this script is used to filter gene duplication clusters. It reads gene clustering results and gene info (coordinates and strand) as input files. It outputs a table of gene clusters in tandem, cluster range and number of genes in the cluster.
 - scripts/MorexAtlas: contains all scripts used for the construction of the Morex gene expression atlas and for hosting it on the EORNA web infrastructure.
 - scripts/TFBS: contains the scripts used for analysing the transcription factor binding sites and plotting the results from this.
-- scripts/variantCalling: contains all scripts for mapping RNA-Seq reads to the Morex v1 reference and calling small variants based on this.
 
   There is a separate [README](https://github.com/cropgeeks/barleyPantranscriptome/blob/main/PanBaRT20.md) that details the construction of the PanBaRT20 RTD.
   
